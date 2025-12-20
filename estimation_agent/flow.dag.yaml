@@ -1,0 +1,32 @@
+$schema: https://azuremlschemas.azureedge.net/promptflow/latest/Flow.schema.json
+inputs:
+  user_input:
+    type: object
+    description: "ユーザーからの見積もり依頼"
+    default:
+      project_type: "web_app"
+      duration_months: 6
+      team_size: 3
+
+outputs:
+  response:
+    type: object
+    reference: ${generate_response.output}
+
+nodes:
+- name: call_calc
+  type: python
+  source:
+    type: code
+    path: call_calc_tool.py
+  inputs:
+    user_input: ${inputs.user_input}
+
+- name: generate_response
+  type: python
+  source:
+    type: code
+    path: generate_response_mock.py
+  inputs:
+    calc_result: ${call_calc.output}
+    user_input: ${inputs.user_input}

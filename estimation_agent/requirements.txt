@@ -1,0 +1,8 @@
+promptflow
+promptflow-tools
+promptflow-devkit
+pytest
+pytest-mock
+pytest-cov
+python-dotenv
+requests
