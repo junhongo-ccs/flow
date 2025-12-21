@@ -22,11 +22,27 @@ nodes:
   inputs:
     user_input: ${inputs.user_input}
 
-- name: generate_response
+- name: lookup_knowledge
   type: python
   source:
     type: code
-    path: generate_response_mock.py
+    path: lookup_knowledge.py
+  inputs:
+    user_input: ${inputs.user_input}
+
+- name: generate_response
+  type: llm
+  source:
+    type: code
+    path: generate_response.jinja2
   inputs:
     calc_result: ${call_calc.output}
     user_input: ${inputs.user_input}
+    knowledge: ${lookup_knowledge.output}
+    deployment_name: gpt-4o
+  connection: azure_openai_connection
+  api: chat
+  parameters:
+    deployment_name: gpt-4o
+    temperature: 0.7
+    max_tokens: 1000
