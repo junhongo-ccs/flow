@@ -24,6 +24,13 @@ jobs:
         pip install -r requirements.txt
         pip install azure-search-documents==11.6.0 azure-identity
 
+    - name: Create Prompt Flow Connection
+      env:
+        AZURE_OPENAI_ENDPOINT: ${{ secrets.AZURE_OPENAI_ENDPOINT }}
+        AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
+      run: |
+        pf connection create --file estimation_agent/connections/azure_openai_connection.yaml
+
     - name: Run Prompt Flow Test
       env:
         # Azure OpenAI
