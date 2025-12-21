@@ -27,11 +27,21 @@ jobs:
         pip install azure-search-documents==11.6.0 azure-identity keyrings.alt
 
     - name: Create Prompt Flow Connection
-      env:
-        AZURE_OPENAI_ENDPOINT: ${{ secrets.AZURE_OPENAI_ENDPOINT }}
-        AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
       run: |
-        pf connection create --file estimation_agent/connections/azure_openai_connection.yaml
+        # Clean the endpoint URL
+        CLEAN_ENDPOINT=$(echo "${{ secrets.AZURE_OPENAI_ENDPOINT }}" | xargs | sed 's/\/$//')
+        
+        # Create a temporary connection file with literal values
+        cat <<EOF > ci_connection.yaml
+        name: azure_openai_connection
+        type: azure_open_ai
+        api_key: "${{ secrets.AZURE_OPENAI_API_KEY }}"
+        api_base: "$CLEAN_ENDPOINT"
+        api_type: azure
+        api_version: "2024-02-01"
+        EOF
+        
+        pf connection create --file ci_connection.yaml
 
     - name: Run Prompt Flow Test
       env:
