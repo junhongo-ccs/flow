@@ -26,6 +26,23 @@ jobs:
         pip install -r requirements.txt
         pip install azure-search-documents==11.6.0 azure-identity keyrings.alt
 
+    - name: Verify Secrets
+      run: |
+        echo "Verifying presence of secrets (lengths only):"
+        echo "AZURE_OPENAI_ENDPOINT length: ${#AZURE_OPENAI_ENDPOINT}"
+        echo "AZURE_OPENAI_API_KEY length: ${#AZURE_OPENAI_API_KEY}"
+        echo "AZURE_AI_SEARCH_ENDPOINT length: ${#AZURE_AI_SEARCH_ENDPOINT}"
+        echo "AZURE_AI_SEARCH_API_KEY length: ${#AZURE_AI_SEARCH_API_KEY}"
+        if [ ${#AZURE_OPENAI_ENDPOINT} -eq 0 ] || [ ${#AZURE_OPENAI_API_KEY} -eq 0 ]; then
+          echo "ERROR: One or more secrets are missing!"
+          exit 1
+        fi
+      env:
+        AZURE_OPENAI_ENDPOINT: ${{ secrets.AZURE_OPENAI_ENDPOINT }}
+        AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
+        AZURE_AI_SEARCH_ENDPOINT: ${{ secrets.AZURE_AI_SEARCH_ENDPOINT }}
+        AZURE_AI_SEARCH_API_KEY: ${{ secrets.AZURE_AI_SEARCH_API_KEY }}
+
     - name: Create Prompt Flow Connection
       run: |
         # Clean the endpoint URL

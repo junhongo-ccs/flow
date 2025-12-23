@@ -7,12 +7,10 @@ inputs:
       project_type: "web_app"
       duration_months: 6
       team_size: 3
-
 outputs:
   response:
     type: object
     reference: ${generate_response.output}
-
 nodes:
 - name: call_calc
   type: python
@@ -21,7 +19,6 @@ nodes:
     path: call_calc_tool.py
   inputs:
     user_input: ${inputs.user_input}
-
 - name: lookup_knowledge
   type: python
   source:
@@ -29,7 +26,6 @@ nodes:
     path: lookup_knowledge.py
   inputs:
     user_input: ${inputs.user_input}
-
 - name: generate_response
   type: llm
   source:

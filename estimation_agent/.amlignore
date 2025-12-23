@@ -1,0 +1,10 @@
+venv/
+.venv/
+__pycache__/
+*.pyc
+.promptflow/
+.env
+deploy.sh
+deployment/
+docs/
+tests/
