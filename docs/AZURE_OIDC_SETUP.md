@@ -2,6 +2,30 @@
 
 GitHub ActionsからAzureへのデプロイを自動化するために、OIDC（OpenID Connect）認証を設定する必要があります。
 
+## クイックスタート（推奨）
+
+**最も簡単な方法**: 自動セットアップスクリプトを使用
+
+```bash
+cd /Users/hongoujun/Documents/GitHub/flow
+./scripts/setup-azure-oidc.sh
+```
+
+このスクリプトが以下をすべて自動で実行します:
+1. Azure ADアプリケーション作成
+2. サービスプリンシパル作成
+3. ロール付与
+4. Federated Credential設定
+5. GitHub Secretsに設定すべき値を表示
+
+スクリプト実行後、表示された3つの値をGitHub Secretsに設定するだけです。
+
+---
+
+## 手動セットアップ手順
+
+自動スクリプトを使わない場合は、以下の手順を実行してください。
+
 ## 前提条件
 - Azure CLI がインストールされていること
 - Azureサブスクリプションへの管理者権限があること
@@ -14,28 +38,35 @@ GitHub ActionsからAzureへのデプロイを自動化するために、OIDC（
 # アプリケーション名を設定
 APP_NAME="github-actions-flow-deploy"
 
-# Azure ADアプリケーションを作成
-az ad app create --display-name $APP_NAME
+# Azure ADアプリケーションを作成し、appIdを取得
+APP_ID=$(az ad app create --display-name $APP_NAME --query appId -o tsv)
+
+# 取得したClient IDを表示
+echo "AZURE_CLIENT_ID: $APP_ID"
 ```
 
-作成されたアプリケーションの `appId` (Client ID) をメモしてください。
+> **💡 ヒント**: `APP_ID`変数に自動的にClient IDが格納されます。この値は後の手順で使用します。
 
 ### 2. サービスプリンシパルの作成
 
 ```bash
-# 上記で取得したappIdを使用
-APP_ID="<your-app-id>"
-
 # サブスクリプションIDを取得
 SUBSCRIPTION_ID=$(az account show --query id -o tsv)
 
 # サービスプリンシパルを作成し、Contributorロールを付与
-az ad sp create-for-rbac \
-  --name $APP_NAME \
-  --role contributor \
-  --scopes /subscriptions/$SUBSCRIPTION_ID/resourceGroups/rg-estimation-agent \
-  --sdk-auth
+# 注: APP_IDは前のステップで既に設定されています
+az ad sp create --id $APP_ID
+
+# リソースグループへのContributorロールを付与
+az role assignment create \
+  --assignee $APP_ID \
+  --role Contributor \
+  --scope /subscriptions/$SUBSCRIPTION_ID/resourceGroups/rg-estimation-agent
+
+echo "サービスプリンシパルの作成が完了しました"
 ```
+
+> **📝 注意**: `--sdk-auth`オプションは非推奨のため、OIDC認証を使用します。
 
 ### 3. Federated Credentialの設定
 
