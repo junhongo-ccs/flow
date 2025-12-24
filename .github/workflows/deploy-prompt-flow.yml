@@ -36,6 +36,41 @@ jobs:
         tenant-id: ${{ secrets.AZURE_TENANT_ID }}
         subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
+    - name: Delete and recreate endpoint
+      continue-on-error: true
+      run: |
+        echo "Deleting endpoint to ensure clean state..."
+        az ml online-endpoint delete \
+          --name estimation-agent-endpoint \
+          --resource-group rg-estimation-agent \
+          --workspace-name mlw-estimation-agent \
+          --yes --no-wait || echo "Endpoint not found or already deleted"
+        
+        echo "Waiting for endpoint deletion..."
+        for i in {1..30}; do
+          sleep 10
+          ENDPOINT_EXISTS=$(az ml online-endpoint list \
+            --resource-group rg-estimation-agent \
+            --workspace-name mlw-estimation-agent \
+            --query "[?name=='estimation-agent-endpoint'].name" -o tsv)
+          
+          if [ -z "$ENDPOINT_EXISTS" ]; then
+            echo "✓ Endpoint successfully deleted (attempt $i/30)"
+            break
+          fi
+          
+          echo "⏳ Endpoint deletion in progress (attempt $i/30)..."
+        done
+        
+        echo "Waiting additional 30 seconds for complete cleanup..."
+        sleep 30
+        
+        echo "Creating fresh endpoint..."
+        az ml online-endpoint create \
+          --name estimation-agent-endpoint \
+          --resource-group rg-estimation-agent \
+          --workspace-name mlw-estimation-agent
+
     - name: Delete existing production deployment
       continue-on-error: true
       run: |
@@ -44,11 +79,9 @@ jobs:
           --endpoint-name estimation-agent-endpoint \
           --resource-group rg-estimation-agent \
           --workspace-name mlw-estimation-agent \
-          --query "[?name=='production'].name" -o tsv 2>/dev/null || echo "")
+          --query "[?name=='production'].name" -o tsv)
         
-        if [ -z "$DEPLOYMENT_EXISTS" ]; then
-          echo "No production deployment found, skipping deletion"
-        else
+        if [ ! -z "$DEPLOYMENT_EXISTS" ]; then
           echo "Production deployment exists, deleting..."
           az ml online-deployment delete \
             --name production \
@@ -57,14 +90,14 @@ jobs:
             --workspace-name mlw-estimation-agent \
             --yes --no-wait
           
-          echo "Waiting for deletion to complete..."
+          echo "Waiting for deployment deletion to complete..."
           for i in {1..30}; do
             sleep 10
             STILL_EXISTS=$(az ml online-deployment list \
               --endpoint-name estimation-agent-endpoint \
               --resource-group rg-estimation-agent \
               --workspace-name mlw-estimation-agent \
-              --query "[?name=='production'].name" -o tsv 2>/dev/null || echo "")
+              --query "[?name=='production'].name" -o tsv)
             
             if [ -z "$STILL_EXISTS" ]; then
               echo "✓ Deployment successfully deleted (attempt $i/30)"
