@@ -98,16 +98,6 @@ jobs:
           AZURE_AI_SEARCH_API_KEY: "${{ secrets.AZURE_AI_SEARCH_API_KEY }}"
           USE_MOCK_CALC: "false"
           CALC_API_URL: "https://estimate-api-cli.azurewebsites.net/api"
-        liveness_probe:
-          initial_delay: 600
-          period: 30
-          timeout: 30
-          failure_threshold: 30
-        readiness_probe:
-          initial_delay: 600
-          period: 30
-          timeout: 30
-          failure_threshold: 30
         EOF
 
     - name: Deploy Prompt Flow
