@@ -45,9 +45,9 @@ jobs:
           --endpoint-name estimation-agent-endpoint \
           --resource-group rg-estimation-agent \
           --workspace-name mlw-estimation-agent \
-          --yes --no-wait || echo "Production deployment not found or already deleted"
-        echo "Waiting 60 seconds for cleanup to complete..."
-        sleep 60
+          --yes || echo "Production deployment not found or already deleted"
+        echo "Deletion complete, waiting 30 seconds before proceeding..."
+        sleep 30
 
     - name: Create deployment configuration
       run: |
