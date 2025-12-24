@@ -36,21 +36,18 @@ jobs:
         tenant-id: ${{ secrets.AZURE_TENANT_ID }}
         subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-    - name: Delete failed deployments
+    - name: Delete existing production deployment
       continue-on-error: true
       run: |
-        echo "Cleaning up failed deployments..."
-        for deployment in green final v2-deploy; do
-          echo "Attempting to delete deployment: $deployment"
-          az ml online-deployment delete \
-            --name $deployment \
-            --endpoint-name estimation-agent-endpoint \
-            --resource-group rg-estimation-agent \
-            --workspace-name mlw-estimation-agent \
-            --yes --no-wait || echo "Deployment $deployment not found or already deleted"
-        done
-        echo "Waiting 30 seconds for cleanup to process..."
-        sleep 30
+        echo "Cleaning up existing production deployment..."
+        az ml online-deployment delete \
+          --name production \
+          --endpoint-name estimation-agent-endpoint \
+          --resource-group rg-estimation-agent \
+          --workspace-name mlw-estimation-agent \
+          --yes --no-wait || echo "Production deployment not found or already deleted"
+        echo "Waiting 60 seconds for cleanup to complete..."
+        sleep 60
 
     - name: Create deployment configuration
       run: |
