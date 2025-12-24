@@ -77,6 +77,41 @@ def _call_real_calc_api(user_input: Dict[str, Any]) -> Dict[str, Any]:
         logger.warning("CALC_API_URL is not set. Falling back to mock.")
         return _mock_calc(user_input)
     
+    # Transform user input to Backend API format
+    # Backend expects: {"screen_count": int, "complexity": "low"|"medium"|"high"}
+    # User provides: {"project_type": str, "duration_months": int, "team_size": int}
+    # OR: {"screen_count": int, "complexity": str}
+    
+    # Check if already in correct format
+    if "screen_count" in user_input and "complexity" in user_input:
+        api_request = user_input
+    else:
+        # Estimate screen_count from project parameters
+        duration = user_input.get("duration_months", 6)
+        team_size = user_input.get("team_size", 3)
+        project_type = user_input.get("project_type", "web_app")
+        
+        # Simple heuristic: larger teams and longer projects = more screens
+        estimated_screens = max(5, int(duration * team_size * 0.8))
+        
+        # Map project complexity
+        complexity_map = {
+            "simple": "low",
+            "standard": "medium",
+            "complex": "high",
+            "web_app": "medium",
+            "mobile_app": "high",
+            "enterprise": "high"
+        }
+        complexity = complexity_map.get(project_type, "medium")
+        
+        api_request = {
+            "screen_count": estimated_screens,
+            "complexity": complexity
+        }
+        
+        logger.info(f"Transformed input: {user_input} -> {api_request}")
+    
     headers = {
         "Content-Type": "application/json",
     }
@@ -86,12 +121,34 @@ def _call_real_calc_api(user_input: Dict[str, Any]) -> Dict[str, Any]:
     try:
         response = requests.post(
             f"{calc_api_url}/calculate_estimate",
-            json=user_input,
+            json=api_request,
             headers=headers,
             timeout=30
         )
         response.raise_for_status()
-        return response.json()
+        api_response = response.json()
+        
+        # Transform Backend API response to expected format
+        # Backend returns: {"status": "ok", "estimated_amount": int, "breakdown": {...}, ...}
+        # Expected format: {"total": int, "breakdown": {...}, "unit": "JPY"}
+        
+        if api_response.get("status") == "ok":
+            return {
+                "total": api_response.get("estimated_amount"),
+                "breakdown": api_response.get("breakdown", {}),
+                "unit": api_response.get("currency", "JPY"),
+                "screen_count": api_response.get("screen_count"),
+                "complexity": api_response.get("complexity"),
+                "config_version": api_response.get("config_version"),
+                "is_mock": False
+            }
+        else:
+            return {
+                "error": True,
+                "message": api_response.get("message", "Unknown error"),
+                "calc_result": None
+            }
+            
     except Exception as e:
         logger.error(f"calc API error: {e}")
         return {
@@ -99,3 +156,4 @@ def _call_real_calc_api(user_input: Dict[str, Any]) -> Dict[str, Any]:
             "message": str(e),
             "calc_result": None
         }
+

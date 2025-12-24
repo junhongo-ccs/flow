@@ -1,0 +1,113 @@
+name: Deploy Prompt Flow to Azure
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      PYTHON_KEYRING_BACKEND: keyrings.alt.file.PlaintextKeyring
+    
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install azure-cli azure-ai-ml keyrings.alt
+
+    - name: Azure Login (OIDC)
+      uses: azure/login@v2
+      with:
+        client-id: ${{ secrets.AZURE_CLIENT_ID }}
+        tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+        subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+    - name: Delete failed deployments
+      continue-on-error: true
+      run: |
+        echo "Cleaning up failed deployments..."
+        for deployment in green final v2-deploy; do
+          echo "Attempting to delete deployment: $deployment"
+          az ml online-deployment delete \
+            --name $deployment \
+            --endpoint-name estimation-agent-endpoint \
+            --resource-group rg-estimation-agent \
+            --workspace-name mlw-estimation-agent \
+            --yes --no-wait || echo "Deployment $deployment not found or already deleted"
+        done
+        echo "Waiting 30 seconds for cleanup to process..."
+        sleep 30
+
+    - name: Create deployment configuration
+      run: |
+        cat <<EOF > estimation_agent/deployment/deployment_ci.yaml
+        \$schema: https://azuremlschemas.azureedge.net/latest/managedOnlineDeployment.schema.json
+        name: production
+        endpoint_name: estimation-agent-endpoint
+        model:
+          path: ..
+        instance_type: Standard_E2s_v3
+        instance_count: 1
+        environment:
+          image: mcr.microsoft.com/azureml/curated/promptflow-runtime:latest
+        environment_variables:
+          PRT_CONFIG_OVERRIDE: "deployment.subscription_id=${{ secrets.AZURE_SUBSCRIPTION_ID }},deployment.resource_group=rg-estimation-agent,deployment.workspace_name=mlw-estimation-agent,deployment.endpoint_name=estimation-agent-endpoint,deployment.deployment_name=production"
+          AZURE_OPENAI_ENDPOINT: "${{ secrets.AZURE_OPENAI_ENDPOINT }}"
+          AZURE_OPENAI_API_KEY: "${{ secrets.AZURE_OPENAI_API_KEY }}"
+          AZURE_AI_SEARCH_ENDPOINT: "${{ secrets.AZURE_AI_SEARCH_ENDPOINT }}"
+          AZURE_AI_SEARCH_API_KEY: "${{ secrets.AZURE_AI_SEARCH_API_KEY }}"
+          USE_MOCK_CALC: "false"
+          CALC_API_URL: "https://estimate-api-cli.azurewebsites.net/api"
+        liveness_probe:
+          initial_delay: 600
+          period: 30
+          timeout: 30
+          failure_threshold: 30
+        readiness_probe:
+          initial_delay: 600
+          period: 30
+          timeout: 30
+          failure_threshold: 30
+        EOF
+
+    - name: Deploy Prompt Flow
+      run: |
+        cd estimation_agent
+        az ml online-deployment create \
+          --file deployment/deployment_ci.yaml \
+          --resource-group rg-estimation-agent \
+          --workspace-name mlw-estimation-agent \
+          --all-traffic
+
+    - name: Get deployment status
+      run: |
+        az ml online-deployment show \
+          --name production \
+          --endpoint-name estimation-agent-endpoint \
+          --resource-group rg-estimation-agent \
+          --workspace-name mlw-estimation-agent \
+          --query "{name:name,provisioningState:provisioning_state,readyInstanceCount:ready_instance_count}"
+
+    - name: Get scoring URI
+      run: |
+        SCORING_URI=$(az ml online-endpoint show \
+          --name estimation-agent-endpoint \
+          --resource-group rg-estimation-agent \
+          --workspace-name mlw-estimation-agent \
+          --query scoring_uri -o tsv)
+        echo "Scoring URI: $SCORING_URI"
+        echo "SCORING_URI=$SCORING_URI" >> $GITHUB_ENV

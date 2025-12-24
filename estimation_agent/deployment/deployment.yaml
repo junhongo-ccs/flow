@@ -9,19 +9,21 @@ environment:
   image: mcr.microsoft.com/azureml/curated/promptflow-runtime:latest
 environment_variables:
   PRT_CONFIG_OVERRIDE: "deployment.subscription_id=f477e584-821b-44b4-ad6b-51597eae05a6,deployment.resource_group=rg-estimation-agent,deployment.workspace_name=mlw-estimation-agent,deployment.endpoint_name=estimation-agent-endpoint,deployment.deployment_name=v2-deploy"
-  AZURE_OPENAI_ENDPOINT: "https://estimation-agent-project-resourc.openai.azure.com/"
-  AZURE_OPENAI_API_KEY: "YOUR_AZURE_OPENAI_API_KEY_HERE"
-  AZURE_AI_SEARCH_ENDPOINT: "https://estimation-agent-search.search.windows.net"
-  AZURE_AI_SEARCH_API_KEY: "YOUR_AZURE_SEARCH_API_KEY_HERE"
+  # NOTE: For local/manual deployment, set these values in your .env file
+  # For CI/CD deployment, these are injected via GitHub Secrets
+  AZURE_OPENAI_ENDPOINT: "${AZURE_OPENAI_ENDPOINT}"
+  AZURE_OPENAI_API_KEY: "${AZURE_OPENAI_API_KEY}"
+  AZURE_AI_SEARCH_ENDPOINT: "${AZURE_AI_SEARCH_ENDPOINT}"
+  AZURE_AI_SEARCH_API_KEY: "${AZURE_AI_SEARCH_API_KEY}"
   USE_MOCK_CALC: "false"
   CALC_API_URL: "https://estimate-api-cli.azurewebsites.net/api"
 liveness_probe:
-  initial_delay: 300
+  initial_delay: 600
   period: 30
   timeout: 30
-  failure_threshold: 5
+  failure_threshold: 30
 readiness_probe:
-  initial_delay: 300
+  initial_delay: 600
   period: 30
   timeout: 30
-  failure_threshold: 5
+  failure_threshold: 30
