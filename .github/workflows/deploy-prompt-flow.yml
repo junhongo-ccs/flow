@@ -39,34 +39,44 @@ jobs:
     - name: Delete existing production deployment
       continue-on-error: true
       run: |
-        echo "Cleaning up existing production deployment..."
-        az ml online-deployment delete \
-          --name production \
+        echo "Checking if production deployment exists..."
+        DEPLOYMENT_EXISTS=$(az ml online-deployment list \
           --endpoint-name estimation-agent-endpoint \
           --resource-group rg-estimation-agent \
           --workspace-name mlw-estimation-agent \
-          --yes --no-wait || echo "Production deployment not found or already deleted"
+          --query "[?name=='production'].name" -o tsv 2>/dev/null || echo "")
         
-        echo "Waiting for deletion to complete..."
-        for i in {1..20}; do
-          STATUS=$(az ml online-deployment show \
+        if [ -z "$DEPLOYMENT_EXISTS" ]; then
+          echo "No production deployment found, skipping deletion"
+        else
+          echo "Production deployment exists, deleting..."
+          az ml online-deployment delete \
             --name production \
             --endpoint-name estimation-agent-endpoint \
             --resource-group rg-estimation-agent \
             --workspace-name mlw-estimation-agent \
-            --query provisioningState -o tsv 2\u003e/dev/null || echo "NotFound")
+            --yes --no-wait
           
-          if [ "$STATUS" = "NotFound" ]; then
-            echo "Deployment successfully deleted"
-            break
-          fi
+          echo "Waiting for deletion to complete..."
+          for i in {1..30}; do
+            sleep 10
+            STILL_EXISTS=$(az ml online-deployment list \
+              --endpoint-name estimation-agent-endpoint \
+              --resource-group rg-estimation-agent \
+              --workspace-name mlw-estimation-agent \
+              --query "[?name=='production'].name" -o tsv 2>/dev/null || echo "")
+            
+            if [ -z "$STILL_EXISTS" ]; then
+              echo "✓ Deployment successfully deleted (attempt $i/30)"
+              break
+            fi
+            
+            echo "⏳ Deletion in progress (attempt $i/30)..."
+          done
           
-          echo "Deletion in progress (attempt $i/20), status: $STATUS"
-          sleep 15
-        done
-        
-        echo "Waiting additional 30 seconds for cleanup..."
-        sleep 30
+          echo "Waiting additional 60 seconds for complete cleanup..."
+          sleep 60
+        fi
 
     - name: Create deployment configuration
       run: |
