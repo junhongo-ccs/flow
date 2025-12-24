@@ -45,8 +45,27 @@ jobs:
           --endpoint-name estimation-agent-endpoint \
           --resource-group rg-estimation-agent \
           --workspace-name mlw-estimation-agent \
-          --yes || echo "Production deployment not found or already deleted"
-        echo "Deletion complete, waiting 30 seconds before proceeding..."
+          --yes --no-wait || echo "Production deployment not found or already deleted"
+        
+        echo "Waiting for deletion to complete..."
+        for i in {1..20}; do
+          STATUS=$(az ml online-deployment show \
+            --name production \
+            --endpoint-name estimation-agent-endpoint \
+            --resource-group rg-estimation-agent \
+            --workspace-name mlw-estimation-agent \
+            --query provisioningState -o tsv 2\u003e/dev/null || echo "NotFound")
+          
+          if [ "$STATUS" = "NotFound" ]; then
+            echo "Deployment successfully deleted"
+            break
+          fi
+          
+          echo "Deletion in progress (attempt $i/20), status: $STATUS"
+          sleep 15
+        done
+        
+        echo "Waiting additional 30 seconds for cleanup..."
         sleep 30
 
     - name: Create deployment configuration
