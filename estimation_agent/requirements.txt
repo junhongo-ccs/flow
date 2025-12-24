@@ -6,3 +6,5 @@ pytest-mock
 pytest-cov
 python-dotenv
 requests
+azure-search-documents
+azure-identity
