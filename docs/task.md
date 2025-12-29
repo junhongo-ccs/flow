@@ -1,63 +1,189 @@
-# AI Estimation System - Master Roadmap
+# AI見積もりシステム - タスク管理
 
-> **Design Goal**: Azure AI Agent as the central orchestrator, using Calc API and RAG as tools to generate executive-level HTML estimates.
-
-## 🏁 Phase 1: AI Agent Core (flow)
-- [x] Azure Environment Setup (Foundry, OpenAI, Search)
-- [x] RAG Knowledge Base Construction (18 docs indexed)
-- [x] Local Flow Testing & Mock Integration
-- [x] CI/CD Pipeline (Automated testing on push)
-- [x] **Integration: Connect Agent to Calc API Tool** (URL: `estimate-api-cli.azurewebsites.net`)
-    - [x] Update `.env` and `deployment.yaml` with live API URL
-    - [x] Fix tool path (`/calculate` -> `/calculate_estimate`)
-    - [x] Local verification successful (858,000 JPY for 5 screens, high complexity)
-- [x] Upload & Configure Flow in Foundry (Project: `est-agent-v2`)
-    - [x] Connection Configured (`jhong-mjha50n5-swedencentral`)
-    - [x] Verification Passed (Compute Session)
-- [/] **Deployment: Azure AI Online Endpoint**
-    - [x] ML Workspace & Endpoint Creation
-    - [!] **Deployment Failed (Liveness Probe) - NEXT SESSION**
-        - **Issue**: `v2-deploy` failed with "Liveness probe failed"
-        - **Fix needed**: Increase `initial_delay` from 300s to 600s in `deployment/deployment.yaml`
-        - **Alternative**: Deploy via Azure AI Foundry Portal UI for better error visibility
-
-## 🏗️ Phase 2: Outer Fortifications - Calculation (estimate-backend-calc)
-- [x] Implement YAML-based calculation logic (No AI)
-- [x] Create Azure Functions endpoint (Code ready)
-- [x] Verify standalone calculation accuracy (Tests ready)
-- [x] **Deployment: Deploy to Azure Functions** (URL: `https://estimate-api-cli.azurewebsites.net/api/calculate_estimate`)
-    - [x] Fix 401 Unauthorized (OIDC authentication)
-    - [x] Fix 404 Not Found (dependency packaging with `.python_packages`)
-    - [x] API verification successful (200 OK, 1,320,000 JPY for 10 screens, medium complexity)
-- [x] Expose endpoint for Agent's Tool Call
-
-## 💻 Phase 3: Outer Fortifications - UI (estimation-ui-app)
-- [x] Implement modern, premium single-page UI (v2.0.0)
-- [ ] Connect UI to **Agent Endpoint only** (Waiting for Phase 1 deployment fix)
-- [ ] Implement HTML rendering for `doc--8px` style responses (Done in v2.0.0)
-
-## 🔗 Phase 4: Full System Integration & Verification
-- [ ] End-to-end test: UI -> Agent -> Calc -> AI Generation -> UI
-- [ ] Verify Agent-led orchestration (Agent makes the call to Calc)
-- [ ] Final quality check: "Executive-ready" response verification
+**最終更新**: 2025-12-29 23:10
 
 ---
 
-## 📝 Next Session TODO (2025-12-24)
-1. **Fix Liveness Probe Issue**:
-   - Edit `estimation_agent/deployment/deployment.yaml`:
-     - Change `initial_delay: 300` to `initial_delay: 600` (lines 18, 23)
-   - Retry deployment: `az ml online-deployment create --file deployment/deployment.yaml ...`
-   
-2. **Commit Pending Changes**:
-   - Modified files: `call_calc_tool.py`, `flow.dag.yaml`, `.github/workflows/pf-test.yml`
-   - New files: `deployment/`, `.env`, `deploy.sh`, etc.
-   - Commit message: "feat: integrate live backend API and prepare Azure ML deployment"
+## 🎉 完了済み
 
-3. **Verify Agent Deployment**:
-   - Check deployment status in Azure Portal
-   - Test endpoint with sample request
-   - Proceed to Phase 3 (UI integration) if successful
+### Phase 1: Backend API（完了）
+- ✅ Azure Functions で calc API 実装
+- ✅ デプロイ成功
+- ✅ エンドポイント: `https://estimate-api-cli.azurewebsites.net/api`
+
+### Phase 2: AI Agent（完了）
+- ✅ Prompt Flow 実装
+- ✅ call_calc ツール実装
+- ✅ lookup_knowledge ツール実装（Azure AI Search）
+- ✅ generate_response 実装（Azure OpenAI gpt-4o）
+- ✅ **Azure Container Apps にデプロイ成功**
+  - URL: `https://estimation-agent-app.blueplant-e852c27d.eastus2.azurecontainerapps.io`
+  - ヘルスチェック: `/health` ✅
+  - スコアリング: `/score`
+
+### Phase 3: Frontend UI（完了）
+- ✅ 8pxグリッドデザインシステム実装
+- ✅ 開発見積もりフォーム
+- ✅ デザイン相談フォーム
+- ✅ レスポンシブ対応
+- ✅ GitHubにプッシュ済み
+
+### デザインフェーズ支援機能（完了）
+- ✅ 5つの新しいRAGドキュメント作成
+  - `19_wireframe_process.md`
+  - `20_design_company_collaboration.md`
+  - `21_figma_design_specs.md`
+  - `22_design_to_dev_handoff.md`
+  - `23_design_phase_checklist.md`
+
+### ドキュメント（完了）
+- ✅ プロジェクト状況報告書（外向け簡易版）
+- ✅ プロジェクト状況報告書（内向け詳細版）
+- ✅ 手動デプロイガイド
+- ✅ RAG削除ガイド
 
 ---
-*Last updated: 2025-12-24 01:33*
+
+## 🔄 次回やること
+
+### 1. ~~Frontend UI の API 接続~~（完了 ✅）
+
+**ステータス**: 完了（2025-12-29）
+
+**実施内容**:
+- `app.js` の `API_ENDPOINT` を Container Apps URL に更新
+- 不要な `API_KEY` と Authorization ヘッダーを削除
+- Container Apps の環境変数を設定（Azure OpenAI、AI Search）
+- E2Eテスト完了
+
+### 2. ~~E2Eテスト~~（完了 ✅）
+
+**ステータス**: 完了（2025-12-29）
+
+**結果**:
+- ✅ API直接テスト成功
+- ✅ ブラウザE2Eテスト成功
+- ✅ AI Agent正常動作確認
+- 見積もり例: 1,848,000 JPY（6ヶ月、3名、Webアプリ）
+
+### 3. RAGドキュメントのアップロード（優先度: 中）
+
+**方法**: Azure AI Foundry の UI から手動アップロード
+
+**ファイル**:
+- `estimation_agent/rags/19_wireframe_process.md`
+- `estimation_agent/rags/20_design_company_collaboration.md`
+- `estimation_agent/rags/21_figma_design_specs.md`
+- `estimation_agent/rags/22_design_to_dev_handoff.md`
+- `estimation_agent/rags/23_design_phase_checklist.md`
+
+**手順**:
+1. Azure Portal → Azure AI Search → `estimation-rags` インデックス
+2. 各ファイルを手動でアップロード
+3. インデックスの再構築
+
+### 4. Frontend UI のデプロイ（優先度: 低）
+
+**方法**: Azure Static Web Apps
+
+**手順**:
+1. GitHub Actions ワークフロー作成
+2. `estimation-ui-app` をデプロイ
+3. カスタムドメイン設定（オプション）
+
+---
+
+## 📊 システム構成（現在）
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                        ユーザー                              │
+└────────────────────┬────────────────────────────────────────┘
+                     │
+                     ▼
+┌─────────────────────────────────────────────────────────────┐
+│              Frontend UI (ローカル)                          │
+│  - 8pxグリッドデザイン                                        │
+│  - 開発見積もり + デザイン相談                                │
+│  - http://localhost:8000                                    │
+└────────────────────┬────────────────────────────────────────┘
+                     │ HTTP POST /score
+                     ▼
+┌─────────────────────────────────────────────────────────────┐
+│         AI Agent (Azure Container Apps) ✅                   │
+│  - Flask アプリ                                              │
+│  - https://estimation-agent-app.blueplant-e852c27d...       │
+│  - ヘルスチェック: /health                                   │
+│  - スコアリング: /score                                      │
+└────┬────────────────────────┬──────────────────────┬────────┘
+     │                        │                      │
+     │ call_calc              │ lookup_knowledge     │ generate_response
+     ▼                        ▼                      ▼
+┌──────────────┐    ┌──────────────────┐    ┌──────────────────┐
+│ Backend API  │    │ Azure AI Search  │    │ Azure OpenAI     │
+│ (Functions)  │    │ (RAG)            │    │ (gpt-4o)         │
+│ ✅           │    │ ✅               │    │ ✅               │
+└──────────────┘    └──────────────────┘    └──────────────────┘
+```
+
+---
+
+## 🐛 既知の問題
+
+### 1. Azure ML Prompt Flow デプロイ失敗
+- **問題**: Liveness probe エラーで繰り返し失敗
+- **解決策**: Azure Container Apps に切り替え ✅
+- **ステータス**: 解決済み
+
+### 2. RAGドキュメント未アップロード
+- **問題**: 新しい5つのRAGドキュメントが Azure AI Search にアップロードされていない
+- **影響**: デザイン相談機能が完全には動作しない可能性
+- **優先度**: 中
+- **次のアクション**: 手動アップロード
+
+---
+
+## 💰 コスト試算
+
+### 現在の構成（月額）
+
+| サービス | 用途 | 月額コスト（目安） |
+|---------|------|-------------------|
+| Azure OpenAI (gpt-4o) | AI応答生成 | ¥0 - ¥5,000 |
+| Azure AI Search (Basic) | RAG | ¥10,000 |
+| Azure Functions (Consumption) | Backend API | ¥0 - ¥500 |
+| Azure Container Apps (Consumption) | AI Agent | ¥0 - ¥2,000 |
+| Azure Container Registry (Basic) | Docker イメージ | ¥600 |
+| **合計** | | **¥10,600 - ¥18,100** |
+
+### コスト最適化案
+
+PoCレビュー後、Azure AI Search を削除することで月額 **¥600 - ¥7,500** に削減可能。
+
+---
+
+## 📝 メモ
+
+### デプロイ方法の変更
+- **当初**: Azure ML Prompt Flow → Online Endpoint
+- **最終**: Flask ラッパー → Docker → Azure Container Apps
+- **理由**: Liveness probe の問題を回避
+
+### 学んだこと
+1. Azure ML の Prompt Flow デプロイは、probe 設定が複雑
+2. Container Apps は柔軟で、通常の Web アプリとして扱える
+3. `az acr build` でローカル Docker 不要でビルド可能
+
+---
+
+## 🔗 重要なリンク
+
+- **AI Agent**: https://estimation-agent-app.blueplant-e852c27d.eastus2.azurecontainerapps.io
+- **Backend API**: https://estimate-api-cli.azurewebsites.net/api
+- **GitHub (flow)**: https://github.com/junhongo-ccs/flow
+- **GitHub (estimation-ui-app)**: https://github.com/junhongo-ccs/estimation-ui-app
+- **GitHub (estimate-backend-calc)**: https://github.com/junhongo-ccs/estimate-backend-calc
+
+---
+
+**次回セッション開始時**: RAGドキュメントのアップロード（項目3）から開始

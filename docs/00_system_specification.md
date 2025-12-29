@@ -77,16 +77,19 @@ Azure OpenAI を Agent 内推論に用いる見積もりシステムの全体像
 │ - Azure AI Foundry                         │
 │ - Prompt Flow / Agent                     │
 │ - Azure OpenAI（Agent内推論/生成）         │
+│ - Azure AI Search（RAG検索）               │
 │ - System Prompt で手順定義                 │
-└──────────────┬─────────────────────────────┘
-               │ Tool Call
-               ▼
-┌────────────────────────────────────────────┐
-│ estimate-backend-calc（計算層）             │
-│ - Azure Functions（Python）                │
-│ - YAML係数設定                             │
-│ - AI不使用                                │
-└────────────────────────────────────────────┘
+└──────┬───────┴────────┬────────────────────┘
+       │ Tool Call      │ Tool Call
+       ▼                ▼
+┌──────────────┐  ┌─────────────────────────┐
+│ calc API     │  │ Azure AI Search         │
+│ (計算層)     │  │ (ナレッジベース)        │
+└──────────────┘  └─────────────────────────┘
+│ Azure Functions  │ - 社内ドキュメント      │
+│ - YAML係数設定   │ - 価格表・事例          │
+│ - AI不使用       │ - ベストプラクティス    │
+└──────────────────└─────────────────────────┘
 ```
 
 ---
@@ -98,6 +101,7 @@ Azure OpenAI を Agent 内推論に用いる見積もりシステムの全体像
 |UI|HTML / CSS / Vanilla JS|静的|
 |Agent|Azure AI Foundry|Prompt Flow|
 |**LLM**|**Azure OpenAI**|**Agent内でのみ使用**|
+|**RAG検索**|**Azure AI Search**|**社内ナレッジ検索**|
 |計算API|Azure Functions (Python 3.11)|非AI|
 |認証|Managed Identity / OIDC||
 |デプロイ|SWA / Azure Functions||
@@ -195,9 +199,18 @@ Agent 内で利用可能・現実的な選択肢は以下：
 flows/estimation_agent/
 ├── flow.dag.yaml
 ├── call_calc_tool.py
-├── generate_rationale.jinja2
-├── system_prompt.txt
+├── lookup_knowledge.py
+├── generate_response.jinja2
+├── connections/
+│   └── azure_openai_connection.yaml
+└── rags/
+    └── (社内ドキュメント)
 ```
+
+**ノード構成**:
+1. `call_calc` - calc API呼び出し
+2. `lookup_knowledge` - Azure AI Search でRAG検索
+3. `generate_response` - Azure OpenAI で最終レスポンス生成
 
 ---
 

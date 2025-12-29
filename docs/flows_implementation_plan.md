@@ -682,23 +682,63 @@ jobs:
 
 ---
 
-## 📋 calc API 仕様（決定事項）
+## 📋 calc API 仕様（確定版）
 
 > [!NOTE]
-> Phase 1実装後、以下を決定してください
+> 以下は実装済みの仕様です
 
-### 必要な決定事項
+### 1. エンドポイント
 
-1. **エンドポイント**
-   - URL: `https://????.azurewebsites.net/api/calculate`
-   - メソッド: POST
+- **URL**: `https://estimate-api-cli.azurewebsites.net/api/calculate_estimate`
+- **メソッド**: POST
+- **認証**: なし（将来的にAPI Key追加予定）
 
-2. **認証方法**
-   - [ ] API Key（ヘッダー: `X-API-Key`）
-   - [ ] Managed Identity
-   - [ ] その他: ___________
+### 2. リクエスト形式（Backend API仕様）
 
-3. **リクエスト形式**
+```json
+{
+  "screen_count": 15,
+  "complexity": "medium"
+}
+```
+
+**パラメータ**:
+- `screen_count` (integer, required): 画面数
+- `complexity` (string, required): 複雑度（"low", "medium", "high"）
+
+### 3. レスポンス形式
+
+**成功時**:
+```json
+{
+  "status": "ok",
+  "estimated_amount": 18000000,
+  "breakdown": {
+    "development": 12600000,
+    "design": 3600000,
+    "management": 1800000
+  },
+  "currency": "JPY",
+  "screen_count": 15,
+  "complexity": "medium",
+  "config_version": "1.0"
+}
+```
+
+**エラー時**:
+```json
+{
+  "status": "error",
+  "message": "エラーメッセージ",
+  "estimated_amount": null
+}
+```
+
+### 4. Agent側での入力変換ロジック
+
+`call_calc_tool.py` では、ユーザー入力を Backend API 形式に自動変換します:
+
+**ユーザー入力例**:
 ```json
 {
   "project_type": "web_app",
@@ -707,25 +747,50 @@ jobs:
 }
 ```
 
-4. **レスポンス形式**
-```json
+**Backend API リクエストに変換**:
+```python
+# 画面数の推定
+estimated_screens = max(5, int(duration_months * team_size * 0.8))
+
+# 複雑度のマッピング
+complexity_map = {
+    "simple": "low",
+    "standard": "medium",
+    "complex": "high",
+    "web_app": "medium",
+    "mobile_app": "high",
+    "enterprise": "high"
+}
+complexity = complexity_map.get(project_type, "medium")
+
+# 最終リクエスト
 {
-  "total": 18000000,
-  "breakdown": {
-    "development": 12600000,
-    "design": 3600000,
-    "management": 1800000
-  },
-  "unit": "JPY"
+  "screen_count": 14,  # 6 * 3 * 0.8 = 14.4 → 14
+  "complexity": "medium"
 }
 ```
 
-5. **エラーレスポンス**
-```json
+### 5. Agent側でのレスポンス変換
+
+Backend API のレスポンスを Agent の内部形式に変換:
+
+```python
+# Backend API レスポンス
 {
-  "error": true,
-  "message": "エラーメッセージ",
-  "code": "ERROR_CODE"
+  "status": "ok",
+  "estimated_amount": 18000000,
+  "breakdown": {...},
+  ...
+}
+
+# Agent 内部形式に変換
+{
+  "total": 18000000,
+  "breakdown": {...},
+  "unit": "JPY",
+  "screen_count": 14,
+  "complexity": "medium",
+  "is_mock": False
 }
 ```
 
