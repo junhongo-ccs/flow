@@ -20,6 +20,7 @@ CORS(app, resources={
         "origins": [
             "https://zealous-river-0efdffa0f.1.azurestaticapps.net",
             "http://localhost:8000",
+            "http://localhost:8001",
             "http://localhost:3000"
         ],
         "methods": ["GET", "POST", "DELETE", "OPTIONS"],

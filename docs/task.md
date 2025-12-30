@@ -1,189 +1,41 @@
-# AI見積もりシステム - タスク管理
+# AI見積もりシステム - 最新タスク管理
 
-**最終更新**: 2025-12-29 23:10
-
----
-
-## 🎉 完了済み
-
-### Phase 1: Backend API（完了）
-- ✅ Azure Functions で calc API 実装
-- ✅ デプロイ成功
-- ✅ エンドポイント: `https://estimate-api-cli.azurewebsites.net/api`
-
-### Phase 2: AI Agent（完了）
-- ✅ Prompt Flow 実装
-- ✅ call_calc ツール実装
-- ✅ lookup_knowledge ツール実装（Azure AI Search）
-- ✅ generate_response 実装（Azure OpenAI gpt-4o）
-- ✅ **Azure Container Apps にデプロイ成功**
-  - URL: `https://estimation-agent-app.blueplant-e852c27d.eastus2.azurecontainerapps.io`
-  - ヘルスチェック: `/health` ✅
-  - スコアリング: `/score`
-
-### Phase 3: Frontend UI（完了）
-- ✅ 8pxグリッドデザインシステム実装
-- ✅ 開発見積もりフォーム
-- ✅ デザイン相談フォーム
-- ✅ レスポンシブ対応
-- ✅ GitHubにプッシュ済み
-
-### デザインフェーズ支援機能（完了）
-- ✅ 5つの新しいRAGドキュメント作成
-  - `19_wireframe_process.md`
-  - `20_design_company_collaboration.md`
-  - `21_figma_design_specs.md`
-  - `22_design_to_dev_handoff.md`
-  - `23_design_phase_checklist.md`
-
-### ドキュメント（完了）
-- ✅ プロジェクト状況報告書（外向け簡易版）
-- ✅ プロジェクト状況報告書（内向け詳細版）
-- ✅ 手動デプロイガイド
-- ✅ RAG削除ガイド
+**最終更新**: 2025-12-30 18:00
+**現在のステータス**: Phase 3 (チャットUI) 完了 / Phase 4 (バックエンド統合) 準備中
 
 ---
 
-## 🔄 次回やること
-
-### 1. ~~Frontend UI の API 接続~~（完了 ✅）
-
-**ステータス**: 完了（2025-12-29）
-
-**実施内容**:
-- `app.js` の `API_ENDPOINT` を Container Apps URL に更新
-- 不要な `API_KEY` と Authorization ヘッダーを削除
-- Container Apps の環境変数を設定（Azure OpenAI、AI Search）
-- E2Eテスト完了
-
-### 2. ~~E2Eテスト~~（完了 ✅）
-
-**ステータス**: 完了（2025-12-29）
-
-**結果**:
-- ✅ API直接テスト成功
-- ✅ ブラウザE2Eテスト成功
-- ✅ AI Agent正常動作確認
-- 見積もり例: 1,848,000 JPY（6ヶ月、3名、Webアプリ）
-
-### 3. RAGドキュメントのアップロード（優先度: 中）
-
-**方法**: Azure AI Foundry の UI から手動アップロード
-
-**ファイル**:
-- `estimation_agent/rags/19_wireframe_process.md`
-- `estimation_agent/rags/20_design_company_collaboration.md`
-- `estimation_agent/rags/21_figma_design_specs.md`
-- `estimation_agent/rags/22_design_to_dev_handoff.md`
-- `estimation_agent/rags/23_design_phase_checklist.md`
-
-**手順**:
-1. Azure Portal → Azure AI Search → `estimation-rags` インデックス
-2. 各ファイルを手動でアップロード
-3. インデックスの再構築
-
-### 4. Frontend UI のデプロイ（優先度: 低）
-
-**方法**: Azure Static Web Apps
-
-**手順**:
-1. GitHub Actions ワークフロー作成
-2. `estimation-ui-app` をデプロイ
-3. カスタムドメイン設定（オプション）
+## 📂 履歴
+- [V1フェーズ履歴（アーカイブ）](file:///Users/hongoujun/Documents/GitHub/flow/docs/task_archive_v1_20251229.md)
 
 ---
 
-## 📊 システム構成（現在）
+## 🔄 現在の進捗状況 (V2)
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                        ユーザー                              │
-└────────────────────┬────────────────────────────────────────┘
-                     │
-                     ▼
-┌─────────────────────────────────────────────────────────────┐
-│              Frontend UI (ローカル)                          │
-│  - 8pxグリッドデザイン                                        │
-│  - 開発見積もり + デザイン相談                                │
-│  - http://localhost:8000                                    │
-└────────────────────┬────────────────────────────────────────┘
-                     │ HTTP POST /score
-                     ▼
-┌─────────────────────────────────────────────────────────────┐
-│         AI Agent (Azure Container Apps) ✅                   │
-│  - Flask アプリ                                              │
-│  - https://estimation-agent-app.blueplant-e852c27d...       │
-│  - ヘルスチェック: /health                                   │
-│  - スコアリング: /score                                      │
-└────┬────────────────────────┬──────────────────────┬────────┘
-     │                        │                      │
-     │ call_calc              │ lookup_knowledge     │ generate_response
-     ▼                        ▼                      ▼
-┌──────────────┐    ┌──────────────────┐    ┌──────────────────┐
-│ Backend API  │    │ Azure AI Search  │    │ Azure OpenAI     │
-│ (Functions)  │    │ (RAG)            │    │ (gpt-4o)         │
-│ ✅           │    │ ✅               │    │ ✅               │
-└──────────────┘    └──────────────────┘    └──────────────────┘
-```
+### Phase 1: 計画・設計 ✅
+- [x] 既存リソース (V1) の停止（コスト削減）
+- [x] V2 要件定義書 / 技術スタック / 基本設計書の作成
+
+### Phase 2: RAGナレッジ整備 ✅
+- [x] スケジュール・ケーススタディ等のRAG追加（計26ファイル）
+- [x] Azure AI Search インデックス更新
+
+### Phase 3: フロントエンド チャットUI実装 ✅
+- [x] フォームからチャットタイムラインへの全面刷新
+- [x] 8pxグリッドデザインシステム準拠
+- [x] JavaScript による対話ロジック、Markdownダウンロード機能の実装
+- [x] ローカルブラウザテスト完了
 
 ---
 
-## 🐛 既知の問題
+## � 今後の予定
 
-### 1. Azure ML Prompt Flow デプロイ失敗
-- **問題**: Liveness probe エラーで繰り返し失敗
-- **解決策**: Azure Container Apps に切り替え ✅
-- **ステータス**: 解決済み
+### Phase 4: バックエンドの実装と統合テスト 🔄
+- [ ] **Python 環境のアップデート (3.9以上)**
+    - 現状: Python 3.8.2 → `azure-search-documents` が動作しない
+- [ ] バックエンド `app.py` の修正とローカル疎通テスト
+- [ ] RAG検索の精度調整
 
-### 2. RAGドキュメント未アップロード
-- **問題**: 新しい5つのRAGドキュメントが Azure AI Search にアップロードされていない
-- **影響**: デザイン相談機能が完全には動作しない可能性
-- **優先度**: 中
-- **次のアクション**: 手動アップロード
-
----
-
-## 💰 コスト試算
-
-### 現在の構成（月額）
-
-| サービス | 用途 | 月額コスト（目安） |
-|---------|------|-------------------|
-| Azure OpenAI (gpt-4o) | AI応答生成 | ¥0 - ¥5,000 |
-| Azure AI Search (Basic) | RAG | ¥10,000 |
-| Azure Functions (Consumption) | Backend API | ¥0 - ¥500 |
-| Azure Container Apps (Consumption) | AI Agent | ¥0 - ¥2,000 |
-| Azure Container Registry (Basic) | Docker イメージ | ¥600 |
-| **合計** | | **¥10,600 - ¥18,100** |
-
-### コスト最適化案
-
-PoCレビュー後、Azure AI Search を削除することで月額 **¥600 - ¥7,500** に削減可能。
-
----
-
-## 📝 メモ
-
-### デプロイ方法の変更
-- **当初**: Azure ML Prompt Flow → Online Endpoint
-- **最終**: Flask ラッパー → Docker → Azure Container Apps
-- **理由**: Liveness probe の問題を回避
-
-### 学んだこと
-1. Azure ML の Prompt Flow デプロイは、probe 設定が複雑
-2. Container Apps は柔軟で、通常の Web アプリとして扱える
-3. `az acr build` でローカル Docker 不要でビルド可能
-
----
-
-## 🔗 重要なリンク
-
-- **AI Agent**: https://estimation-agent-app.blueplant-e852c27d.eastus2.azurecontainerapps.io
-- **Backend API**: https://estimate-api-cli.azurewebsites.net/api
-- **GitHub (flow)**: https://github.com/junhongo-ccs/flow
-- **GitHub (estimation-ui-app)**: https://github.com/junhongo-ccs/estimation-ui-app
-- **GitHub (estimate-backend-calc)**: https://github.com/junhongo-ccs/estimate-backend-calc
-
----
-
-**次回セッション開始時**: RAGドキュメントのアップロード（項目3）から開始
+### Phase 5: デプロイ・リリース
+- [ ] Azure Container Apps へのデプロイ
+- [ ] 最終検証
