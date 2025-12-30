@@ -130,12 +130,18 @@ def score():
         # Get or create session
         session = get_or_create_session(session_id)
         
+        # If session is new or history is empty, but client provided history, use it
+        client_history = data.get('conversation_history', [])
+        if not session.history and client_history:
+            session.history = client_history
+        
         # Extract user message
         user_message = user_input.get('message', '')
         selected_option = user_input.get('selected_option')
         
         # Add user message to history
         if user_message or selected_option:
+            # If both are present, prioritize selected_option as the specific intent
             message_content = selected_option if selected_option else user_message
             session.add_message('user', message_content)
         
@@ -185,7 +191,6 @@ def score():
         session.add_message('assistant', agent_response)
         
         # Parse response to check if conversation is complete
-        # Simple heuristic: if response contains markdown header, it's the final output
         is_complete = '# プロジェクト見積もり・提案書' in agent_response
         
         response_data = {
@@ -199,15 +204,24 @@ def score():
             session.final_markdown = agent_response
             response_data["markdown"] = agent_response
         else:
-            # Extract options if present (simple parsing)
-            # Look for [option] patterns in the response
+            # Extract options if present (improved parsing)
             import re
-            options_pattern = r'\[([^\]]+)\]'
+            # Match options in brackets, but exclude those that might be part of markdown headers or links
+            options_pattern = r'\[([^\]\n]+)\]'
             found_options = re.findall(options_pattern, agent_response)
             
             if found_options:
-                options = [{"label": opt, "value": opt} for opt in found_options]
-                response_data["options"] = options
+                # Deduplicate and filter out empty or too long options
+                unique_options = []
+                seen = set()
+                for opt in found_options:
+                    opt = opt.strip()
+                    if opt and opt not in seen and len(opt) < 50:
+                        unique_options.append({"label": opt, "value": opt})
+                        seen.add(opt)
+                
+                if unique_options:
+                    response_data["options"] = unique_options
         
         return jsonify(response_data), 200
         

@@ -84,30 +84,30 @@ sequenceDiagram
 ┌─────────────────────────────────────────────────────────┐
 │  Header                                                  │
 │  ┌─────────────────────────────────────────────────┐   │
-│  │  AI見積もりシステム                              │   │
+│  │  AI見積もりシステム          [最初からやり直す]  │   │
 │  │  開発コストとデザインフェーズをサポート          │   │
 │  └─────────────────────────────────────────────────┘   │
 ├─────────────────────────────────────────────────────────┤
 │  Chat Timeline (スクロール可能)                         │
 │  ┌─────────────────────────────────────────────────┐   │
 │  │                                                  │   │
-│  │  ┌──────────────────────────────┐              │   │
-│  │  │ AI: どのようなシステムを      │              │   │
-│  │  │     開発されますか？          │              │   │
-│  │  └──────────────────────────────┘              │   │
+│  │  [AI] ┌──────────────────────────────┐          │   │
+│  │       │ AI: どのようなシステムを      │          │   │
+│  │       │     開発されますか？          │          │   │
+│  │       └──────────────────────────────┘          │   │
 │  │  ┌────────┐ ┌────────┐ ┌────────┐ ┌────────┐  │   │
 │  │  │Web     │ │Mobile  │ │両方    │ │その他  │  │   │
 │  │  │アプリ  │ │アプリ  │ │        │ │        │  │   │
 │  │  └────────┘ └────────┘ └────────┘ └────────┘  │   │
 │  │                                                  │   │
-│  │              ┌──────────────────────────────┐   │   │
-│  │              │ User: Webアプリケーション    │   │   │
-│  │              └──────────────────────────────┘   │   │
+│  │              ┌──────────────────────────────┐ [U]│   │
+│  │              │ User: Webアプリケーション    │    │   │
+│  │              └──────────────────────────────┘    │   │
 │  │                                                  │   │
-│  │  ┌──────────────────────────────┐              │   │
-│  │  │ AI: 画面数はどのくらいを      │              │   │
-│  │  │     想定していますか？        │              │   │
-│  │  └──────────────────────────────┘              │   │
+│  │  [AI] ┌──────────────────────────────┐          │   │
+│  │       │ AI: 画面数はどのくらいを      │          │   │
+│  │       │     想定していますか？        │          │   │
+│  │       └──────────────────────────────┘          │   │
 │  │  ┌────────┐ ┌────────┐ ┌────────┐ ┌────────┐  │   │
 │  │  │5-10    │ │10-20   │ │20+     │ │その他  │  │   │
 │  │  │画面    │ │画面    │ │画面    │ │        │  │   │
@@ -132,24 +132,30 @@ sequenceDiagram
 ```html
 <!-- AI Message -->
 <div class="message ai-message">
-  <div class="message-content">
-    <p>どのようなシステムを開発されますか？</p>
+  <div class="message-icon">...SVG...</div>
+  <div class="message-body">
+    <div class="message-content">
+      <p>どのようなシステムを開発されますか？</p>
+    </div>
+    <div class="message-options">
+      <button class="option-btn">Webアプリケーション</button>
+      <button class="option-btn">モバイルアプリ</button>
+      <button class="option-btn">両方</button>
+      <button class="option-btn">その他</button>
+    </div>
+    <div class="message-timestamp">14:20</div>
   </div>
-  <div class="message-options">
-    <button class="option-btn" data-value="web_app">Webアプリケーション</button>
-    <button class="option-btn" data-value="mobile_app">モバイルアプリ</button>
-    <button class="option-btn" data-value="both">両方</button>
-    <button class="option-btn other-btn">その他</button>
-  </div>
-  <div class="message-timestamp">14:20</div>
 </div>
 
 <!-- User Message -->
 <div class="message user-message">
-  <div class="message-content">
-    <p>Webアプリケーション</p>
+  <div class="message-icon">...SVG...</div>
+  <div class="message-body">
+    <div class="message-content">
+      <p>Webアプリケーション</p>
+    </div>
+    <div class="message-timestamp">14:20</div>
   </div>
-  <div class="message-timestamp">14:20</div>
 </div>
 ```
 
@@ -183,22 +189,31 @@ sequenceDiagram
 .message {
   margin-bottom: var(--space-3);
   display: flex;
-  flex-direction: column;
-}
-
-.ai-message {
+  gap: var(--space-2);
+  max-width: 85%;
   align-items: flex-start;
 }
 
+.ai-message {
+  flex-direction: row;
+}
+
 .user-message {
-  align-items: flex-end;
+  flex-direction: row-reverse;
+  align-self: flex-end;
+}
+
+.message-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  flex-shrink: 0;
 }
 
 .message-content {
   background: var(--surface);
   padding: var(--space-3);
   border-radius: var(--radius-lg);
-  max-width: 70%;
 }
 
 .ai-message .message-content {
@@ -304,6 +319,17 @@ function addAIMessage(message, options = []) {
   
   chatTimeline.appendChild(messageEl);
   scrollToBottom();
+}
+
+// 会話リセット
+async function handleReset() {
+  if (!confirm('最初からやり直しますか？')) return;
+  if (conversationState.sessionId) {
+    await fetch(`${API_ENDPOINT}/sessions/${conversationState.sessionId}`, { method: 'DELETE' });
+  }
+  // resetUIandState(); // Assuming this function exists elsewhere to clear UI and reset state variables
+  // initializeChat(); // Assuming this function exists elsewhere to re-initialize chat
+  location.reload(); // For simplicity, reload the page to reset everything
 }
 
 // 選択肢ボタン作成
@@ -611,6 +637,14 @@ def score():
     except Exception as e:
         logger.error(f"Error: {e}")
         return jsonify({"error": "Internal server error"}), 500
+
+@app.route('/sessions/<session_id>', methods=['DELETE'])
+def delete_session(session_id):
+    """セッションの削除（やり直し用）"""
+    if session_id in sessions:
+        del sessions[session_id]
+        return jsonify({"message": "Session deleted"}), 200
+    return jsonify({"error": "Session not found"}), 404
 ```
 
 ## 6. セキュリティ設計

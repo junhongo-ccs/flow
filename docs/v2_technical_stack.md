@@ -11,9 +11,10 @@
 │                        Frontend (UI)                         │
 │  ┌──────────────────────────────────────────────────────┐  │
 │  │  Chat UI (HTML/CSS/JavaScript)                       │  │
-│  │  - Message Timeline                                  │  │
+│  │  - Message Timeline (AI/User Icons)                  │  │
 │  │  - Option Buttons                                    │  │
 │  │  - Free Text Input                                   │  │
+│  │  - Session Reset (Restart button)                    │  │
 │  │  - Markdown Download                                 │  │
 │  └──────────────────────────────────────────────────────┘  │
 └─────────────────────────────────────────────────────────────┘
@@ -33,8 +34,8 @@
 │              ▼               ▼               ▼              │
 │  ┌─────────────────┐ ┌─────────────┐ ┌──────────────────┐  │
 │  │ Azure OpenAI    │ │ Azure AI    │ │ Prompt Template  │  │
-│  │ (GPT-4o)        │ │ Search (RAG)│ │ (Jinja2)         │  │
-│  │ - Chat          │ │ - 23 files  │ │ - Conversation   │  │
+│  │ (gpt-4o)        │ │ Search (RAG)│ │ (Jinja2)         │  │
+│  │ - Chat          │ │ - 27 files  │ │ - Conversation   │  │
 │  │ - Estimation    │ │ - Knowledge │ │ - Estimation     │  │
 │  │ - Markdown Gen  │ │ - Pricing   │ │ - Schedule       │  │
 │  └─────────────────┘ └─────────────┘ └──────────────────┘  │
@@ -105,9 +106,10 @@ flow/estimation_agent/
 │   ├── 02_price_list_mobile.md
 │   ├── ...
 │   ├── 23_design_phase_checklist.md
-│   ├── 24_project_schedules.md      # (新規)
-│   ├── 25_schedule_case_studies.md  # (新規)
-│   └── 26_milestone_templates.md    # (新規)
+│   ├── 24_project_schedules.md
+│   ├── 25_schedule_case_studies.md
+│   ├── 26_milestone_templates.md
+│   └── 27_advanced_design_requirements.md  # (新規: 高度なデザイン要求)
 └── deployment/
     ├── deployment.yaml
     └── endpoint.yaml
@@ -186,7 +188,7 @@ flow/estimation_agent/
 
 ## 5. RAG (Retrieval-Augmented Generation)
 
-### 5.1 既存ナレッジ (23ファイル)
+### 5.1 ナレッジファイル一覧 (27ファイル)
 1. 料金表（Web/モバイル）
 2. 開発プロセス
 3. メンテナンスプラン
@@ -195,25 +197,27 @@ flow/estimation_agent/
 6. 事例研究（EC/ポータル/マッチング）
 7. 支払条件
 8. 法的コンプライアンス
-9. デザインコスト
-10. テストサービス
-11. データ移行
-12. 多言語対応
-13. API統合
-14. 分析・レポート
-15. トレーニング・サポート
-16. ワイヤーフレームプロセス
-17. デザイン会社協業
-18. Figmaデザイン仕様
-19. デザインから開発への引き継ぎ
-20. デザインフェーズチェックリスト
+9. デザインコスト (SIer基準)
+10. 支払条件
+11. 法的コンプライアンス
+12. テストサービス
+13. データ移行
+14. 多言語対応
+15. API統合
+16. 分析・レポート
+17. トレーニング・サポート
+18. ワイヤーフレームプロセス
+19. デザイン会社協業
+20. Figmaデザイン仕様
+21. デザインから開発への引き継ぎ
+22. デザインフェーズチェックリスト
+23. プロジェクトスケジュール標準
+24. スケジュール事例研究
+25. マイルストーンテンプレート
+26. 高度なデザイン要求事項 (デザインシステム等)
+27. 開発チーム体制と役割 (※1-8, 05, 06も含む全27ファイル)
 
-### 5.2 新規ナレッジ (V2で追加)
-21. プロジェクトスケジュール標準
-22. スケジュール事例研究
-23. マイルストーンテンプレート
-
-### 5.3 RAG検索戦略
+### 5.2 RAG検索戦略
 - **セマンティック検索**: ユーザーの質問内容から関連ナレッジを検索
 - **メタデータフィルタリング**: プロジェクトタイプ、フェーズなどでフィルタ
 - **Top-K取得**: 関連度の高い上位3-5件を取得

@@ -14,7 +14,7 @@ from dotenv import load_dotenv
 # .env ファイルを明示的に指定して読み込む
 load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), ".env"))
 
-def create_index_if_not_exists(endpoint, key, index_name):
+def recreate_index(endpoint, key, index_name):
     client = SearchIndexClient(endpoint, AzureKeyCredential(key))
     
     index = SearchIndex(
@@ -27,13 +27,17 @@ def create_index_if_not_exists(endpoint, key, index_name):
     )
     
     try:
+        # 既存のインデックスを削除（スキーマ変更を反映するため）
+        print(f"Deleting existing index '{index_name}'...")
+        client.delete_index(index_name)
+    except Exception as e:
+        print(f"Index '{index_name}' did not exist or could not be deleted: {e}")
+        
+    try:
         client.create_index(index)
         print(f"Index '{index_name}' created.")
     except Exception as e:
-        if "already exists" in str(e).lower():
-            print(f"Index '{index_name}' already exists.")
-        else:
-            raise e
+        raise e
 
 def upload_documents(endpoint, key, index_name, rags_dir):
     client = SearchClient(endpoint, index_name, AzureKeyCredential(key))
@@ -68,5 +72,5 @@ if __name__ == "__main__":
         print("Error: AZURE_AI_SEARCH_ENDPOINT or AZURE_AI_SEARCH_API_KEY not set in .env")
         print(f"DEBUG: ENDPOINT={endpoint}")
     else:
-        create_index_if_not_exists(endpoint, key, index_name)
+        recreate_index(endpoint, key, index_name)
         upload_documents(endpoint, key, index_name, rags_dir)
