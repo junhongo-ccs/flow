@@ -14,7 +14,18 @@ from jinja2 import Template
 from openai import AzureOpenAI
 
 app = Flask(__name__)
-CORS(app)  # Enable CORS for frontend
+# Enable CORS for frontend - allow specific origins
+CORS(app, resources={
+    r"/*": {
+        "origins": [
+            "https://zealous-river-0efdffa0f.1.azurestaticapps.net",
+            "http://localhost:8000",
+            "http://localhost:3000"
+        ],
+        "methods": ["GET", "POST", "DELETE", "OPTIONS"],
+        "allow_headers": ["Content-Type"]
+    }
+})
 
 # Load the Jinja2 template
 with open('generate_response.jinja2', 'r', encoding='utf-8') as f:
