@@ -205,6 +205,11 @@ def score():
             if selected_option in ["CALCULATE_ESTIMATE", "見積もり作成", "計算する"]:
                 pass 
             
+            # 1.5 Method keys (direct)
+            elif selected_option in ["screen", "step", "fp"]:
+                session.update_param("method", selected_option)
+                method_only_ack = True
+
             # 2. Map Params
             elif selected_option in PARAM_MAPPING:
                 key = PARAM_MAPPING[selected_option]
