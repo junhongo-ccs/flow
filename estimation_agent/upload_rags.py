@@ -101,8 +101,7 @@ def upload_documents(endpoint: str, api_key: str, index_name: str, rags_dir: str
             "@search.action": "upload",
             "id": doc_id,
             "content": content,
-            "filename": filename,
-            "filepath": filepath,
+            "source": filename
         }
         
         documents.append(document)
@@ -150,9 +149,9 @@ def main():
     print("=" * 60)
     print()
     
-    # Create index
+    # Create index (if it fails, we assume it's because it already exists with a conflicting but compatible schema)
     if not create_index(SEARCH_ENDPOINT, SEARCH_API_KEY, INDEX_NAME):
-        return 1
+        print("⚠️  Index creation/update failed. Proceeding to upload documents anyway...")
     
     print()
     

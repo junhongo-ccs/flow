@@ -40,14 +40,34 @@ wheels/
 
 # OS
 .DS_Store
-Thumbs.db
+
+# Playwright
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
+
+# Lock files
+# package-lock.json (Optional, but keeping for now)
 
 # Testing
 .pytest_cache/
 .coverage
+.coverage.*
 htmlcov/
 *.cover
 .hypothesis/
 
-# Logs
-*.log
+# Deployment Artifacts
+*.zip
+estimation_agent/venv/
+estimation_agent/venv312/
+estimation_agent/estimation_agent.zip
+estimation_agent_deploy.zip
+# Deployment / Archives
+*.zip
+venv312/
+
+# Generated deployment files with secrets
+estimation_agent/deployment/deployment_green.yaml
+estimation_agent/deployment/deployment_ready.yaml

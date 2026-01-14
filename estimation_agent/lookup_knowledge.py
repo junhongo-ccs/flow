@@ -20,7 +20,8 @@ def lookup_knowledge(user_input: Dict[str, Any], top_k: int = 3) -> str:
     Returns:
         結合された関連ドキュメントのテキスト
     """
-    query = user_input.get("project_type", "software development")
+    # ユーザーメッセージを優先し、なければ project_type を使用
+    query = user_input.get("message") or user_input.get("project_type") or "software development"
     endpoint = os.getenv("AZURE_AI_SEARCH_ENDPOINT")
     key = os.getenv("AZURE_AI_SEARCH_API_KEY")
     index_name = "estimation-rags"

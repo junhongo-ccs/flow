@@ -3,10 +3,12 @@ inputs:
   user_input:
     type: object
     description: "ユーザーからの見積もり依頼"
-    default:
-      project_type: "web_app"
-      duration_months: 6
-      team_size: 3
+  conversation_history:
+    type: list
+    default: []
+  session_id:
+    type: string
+    default: ""
 outputs:
   response:
     type: object
@@ -35,8 +37,9 @@ nodes:
     calc_result: ${call_calc.output}
     user_input: ${inputs.user_input}
     knowledge: ${lookup_knowledge.output}
+    conversation_history: ${inputs.conversation_history}
     deployment_name: gpt-4o
-  connection: azure_openai_connection
+  connection: azure_openai_connection_final
   api: chat
   parameters:
     deployment_name: gpt-4o
