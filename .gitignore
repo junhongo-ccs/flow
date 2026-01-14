@@ -71,3 +71,18 @@ venv312/
 # Generated deployment files with secrets
 estimation_agent/deployment/deployment_green.yaml
 estimation_agent/deployment/deployment_ready.yaml
+
+# Local verification and disposable artifacts
+docs/deployment_and_verification.md
+estimation_agent/test_regex.py
+tests/evidence_pack/
+tests/verify_golden_snapshots.py
+tests/verify_phase1.py
+tests/verify_phase2.py
+tests/verify_phase3.py
+tests/verify_phase3_logic.py
+tests/verify_remote_deployment.py
+tests/simulate_final_prompt.py
+tests/simulate_rationale.py
+tests/test_backend_logic.py
+tests/test_method_locking.py

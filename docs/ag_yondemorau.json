@@ -1,0 +1,100 @@
+{
+  "document_type": "antigravity_project_brief",
+  "purpose": "Antigravityがプロジェクト全体の構造と役割分担を正確に理解し、誤った補完・推測・最適化を行わないための前提定義",
+  "project_overview": {
+    "goal": "UIUXチーム主導で、外部デザイン会社を含むプロジェクトにおいて、破綻しない概算見積りを迅速に作成する仕組みを構築する",
+    "scope": [
+      "UI",
+      "Azure AI Agent",
+      "RAG",
+      "Calc API",
+      "Antigravity"
+    ],
+    "current_status": "UI → Agent → RAG → Calc API の疎通確認まで完了。見積り判断ロジックは未統合。"
+  },
+  "architecture_principles": {
+    "core_policy": "Agent中心設計",
+    "role_separation": {
+      "UI": "入力・結果表示のみ。判断しない。",
+      "Azure_AI_Agent": "唯一の判断主体。オーケストレーションと意思決定を行う。",
+      "RAG": "知識参照のみ。判断・計算は禁止。",
+      "Calc_API": "数値計算専用。条件分岐・解釈は禁止。",
+      "Antigravity": "文書生成・整理のみ。判断・設計変更は禁止。"
+    },
+    "forbidden_actions": [
+      "異なる粒度の工数を直接合算すること",
+      "推測に基づく見積り数値の生成",
+      "前提や根拠を明示しない断定表現",
+      "Agentの判断をAntigravityが代替すること"
+    ]
+  },
+  "estimation_policy": {
+    "estimation_type": "vendor_mixed",
+    "basic_structure": "二層見積り",
+    "layers": {
+      "layer_A_internal": {
+        "owner": "UIUX / 開発チーム",
+        "status": "確定見積り対象",
+        "methods": ["STEP", "画面数"],
+        "productivity": "社内実績に基づく"
+      },
+      "layer_B_vendor": {
+        "owner": "外部デザイン会社",
+        "status": "仮見積り（レンジ）",
+        "methods": ["画面数ベース"],
+        "output_constraints": [
+          "estimated_range 必須",
+          "assumptions 必須",
+          "confidence 必須"
+        ]
+      }
+    }
+  },
+  "task_phases": [
+    {
+      "phase": "Phase1_Fact_Calculation",
+      "objective": "推論と計算の完全分離",
+      "tasks": [
+        "Calc API のI/O責務固定",
+        "AgentからCalc APIへの数値計算接続",
+        "推論のみで数値を返す経路の遮断"
+      ]
+    },
+    {
+      "phase": "Phase2_Method_Selection",
+      "objective": "TERASOLUNAに基づく規模見積り手法選定",
+      "tasks": [
+        "STEP / FP / 画面数の選定ルール定義",
+        "Agentによる手法選定理由の言語化",
+        "RAGは根拠参照のみで利用"
+      ]
+    },
+    {
+      "phase": "Phase3_Vendor_Mixed",
+      "objective": "外部デザイン会社を含む見積り破綻防止",
+      "tasks": [
+        "二層見積り構造の厳守",
+        "委託範囲入力テンプレの利用",
+        "粒度マッピング定義",
+        "confidence 強制付与"
+      ]
+    }
+  ],
+  "antigravity_execution_rules": {
+    "allowed": [
+      "既存情報の構造化",
+      "文書化",
+      "整理・要約（事実ベース）"
+    ],
+    "disallowed": [
+      "判断の追加",
+      "設計方針の変更提案",
+      "数値・ロジックの補完",
+      "将来構想の記述"
+    ]
+  },
+  "reference_documents": [
+    "README_design_snapshot.md"
+  ],
+  "final_note": "Antigravityは本ドキュメントを絶対前提とし、ここに記載されていない判断・推測・最適化を行ってはならない。"
+}
