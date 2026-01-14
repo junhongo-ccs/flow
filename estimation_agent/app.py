@@ -194,6 +194,7 @@ def score():
         
         user_message = user_input.get('message', '')
         selected_option = user_input.get('selected_option') # This is the explicit intent
+        method_only_ack = False
         
         # --- PHASE 2/3 LOGIC: Explicit Param Collection ---
         
@@ -211,6 +212,7 @@ def score():
                 # Method Selection
                 if key in ["step", "fp", "screen"]:
                     session.update_param("method", key)
+                    method_only_ack = True
                 
                 # Complexity
                 elif key in ["low", "medium", "high"]:
@@ -275,6 +277,14 @@ def score():
         # 4. Calculation
         calc_result_json = None
         should_calculate = (selected_option in ["CALCULATE_ESTIMATE", "見積もり作成", "計算する"])
+        
+        if method_only_ack and not should_calculate:
+            response_data = {
+                "message": "了解、手法を記録した。",
+                "is_complete": False,
+                "session_id": session.session_id
+            }
+            return jsonify(response_data), 200
         
         if should_calculate:
             params = session.collected_params
